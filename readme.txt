@@ -1,5 +1,7 @@
 AnimatorCoder by Small Hedge Games 08/04/2024
 
+Note: Crossfade is not affected when playing the RESET animation through script or through the ONPARAMETER inspector!
+
 Setup:
 1. Fill in Animator States and Animator Parameters in AnimatorValues
 2. Use the SHG.AnimatorCoder namespace
