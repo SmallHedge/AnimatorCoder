@@ -1,5 +1,5 @@
 //Author: Small Hedge Games
-//Date: 05/04/2024
+//Date: 08/04/2024
 
 using System.Collections;
 using UnityEngine;
@@ -54,59 +54,115 @@ namespace SHG.AnimatorCoder
         /// <summary> Returns the current animation that is playing </summary>
         public Animations GetCurrentAnimation(int layer)
         {
-            return currentAnimation[layer];
+            try
+            {
+                return currentAnimation[layer];
+            }
+            catch
+            {
+                LogError("Can't retrieve Current Animation. Fix: Initialize() in Start() and don't exceed number of animator layers");
+                return Animations.RESET;
+            }
         }
 
         /// <summary> Sets the whole layer to be locked or unlocked </summary>
         public void SetLocked(bool lockLayer, int layer)
         {
-            layerLocked[layer] = lockLayer;
+            try
+            {
+                layerLocked[layer] = lockLayer;
+            }
+            catch
+            {
+                LogError("Can't retrieve Current Animation. Fix: Initialize() in Start() and don't exceed number of animator layers");
+            }
+        }
+
+        public bool IsLocked(int layer)
+        {
+            try
+            {
+                return layerLocked[layer];
+            }
+            catch
+            {
+                LogError("Can't retrieve Current Animation. Fix: Initialize() in Start() and don't exceed number of animator layers");
+                return false;
+            }
         }
 
         /// <summary> Sets an animator parameter </summary>
         public void SetBool(Parameters id, bool value)
         {
-            parameters[(int)id].value = value;
+            try
+            {
+                parameters[(int)id].value = value;
+            }
+            catch
+            {
+                LogError("Please Initialize() in Start()");
+            }
         }
 
         /// <summary> Returns an animator parameter </summary>
         public bool GetBool(Parameters id)
         {
-            return parameters[(int)id].value;
+            try
+            {
+                return parameters[(int)id].value;
+            }
+            catch
+            {
+                LogError("Please Initialize() in Start()");
+                return false;
+            }
         }
 
         /// <summary> Takes in the animation details and the animation layer, then attempts to play the animation </summary>
         public bool Play(AnimationData data, int layer = 0)
         {
-            if (data.animation == Animations.RESET)
+            try
             {
-                DefaultAnimation(layer);
+                if (data.animation == Animations.RESET)
+                {
+                    DefaultAnimation(layer);
+                    return false;
+                }
+
+                if (layerLocked[layer] || currentAnimation[layer] == data.animation) return false;
+
+                if (currentCoroutine != null) StopCoroutine(currentCoroutine);
+                layerLocked[layer] = data.lockLayer;
+                currentAnimation[layer] = data.animation;
+
+                animator.CrossFade(AnimatorValues.GetHash(currentAnimation[layer]), data.crossfade, layer);
+
+                if (data.nextAnimation != null)
+                {
+                    currentCoroutine = StartCoroutine(Wait());
+                    IEnumerator Wait()
+                    {
+                        animator.Update(0);
+                        float delay = animator.GetNextAnimatorStateInfo(layer).length;
+                        if (data.crossfade == 0) delay = animator.GetCurrentAnimatorStateInfo(layer).length;
+                        yield return new WaitForSeconds(delay - data.nextAnimation.crossfade);
+                        SetLocked(false, layer);
+                        Play(data.nextAnimation, layer);
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                LogError("Please Initialize() in Start()");
                 return false;
             }
+        }
 
-            if (layerLocked[layer] || currentAnimation[layer] == data.animation) return false;
-
-            if (currentCoroutine != null) StopCoroutine(currentCoroutine);
-            layerLocked[layer] = data.lockLayer;
-            currentAnimation[layer] = data.animation;
-
-            animator.CrossFade(AnimatorValues.GetHash(currentAnimation[layer]), data.crossfade, layer);
-
-            if (data.nextAnimation != null)
-            {
-                currentCoroutine = StartCoroutine(Wait());
-                IEnumerator Wait()
-                {
-                    animator.Update(0);
-                    float delay = animator.GetNextAnimatorStateInfo(layer).length;
-                    if (data.crossfade == 0) delay = animator.GetCurrentAnimatorStateInfo(layer).length;
-                    yield return new WaitForSeconds(delay - data.nextAnimation.crossfade);
-                    SetLocked(false, layer);
-                    Play(data.nextAnimation, layer);
-                }
-            }
-
-            return true;
+        private void LogError(string message)
+        {
+            Debug.LogError("AnimatorCoder Error: " + message);
         }
     }
 
@@ -135,6 +191,10 @@ namespace SHG.AnimatorCoder
     /// <summary> Class the manages the hashes of animations and parameters </summary>
     public class AnimatorValues
     {
+        /// <summary> Returns the animation hash array </summary>
+        public static int[] Animations { get { return animations; } }
+
+        private static int[] animations;
         private static bool initialized = false;
 
         /// <summary> Initializes the animator state names </summary>
@@ -156,10 +216,7 @@ namespace SHG.AnimatorCoder
             return animations[(int)animation];
         }
 
-        /// <summary> Returns the animation hash array </summary>
-        public static int[] Animations { get { return animations; } }
 
-        private static int[] animations;
     }
 
     /// <summary> Allows the animation parameters to be shown in debug inspector </summary>
