@@ -18,3 +18,5 @@ void SetLocked(bool lockLayer, int layer) - Set a layer to be locked
 bool IsLocked(int layer) - Is the layer locked?
 void SetBool(Parameters id, bool value) - Sets a parameter
 bool GetBool(Parameters id) - Returns a parameter
+
+Tutorial: https://youtu.be/9tvDtS1vYuM
