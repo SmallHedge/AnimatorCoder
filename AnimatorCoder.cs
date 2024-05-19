@@ -31,10 +31,10 @@ namespace SHG.AnimatorCoder
             {
                 layerLocked[i] = false;
 
-                int hash = animator.GetCurrentAnimatorStateInfo(i).fullPathHash;
+                int hash = animator.GetCurrentAnimatorStateInfo(i).shortNameHash;
                 for (int k = 0; k < AnimatorValues.Animations.Length; ++k)
                 {
-                    if (hash == AnimatorValues.Animations[i])
+                    if (hash == AnimatorValues.Animations[k])
                     {
                         currentAnimation[i] = (Animations)Enum.GetValues(typeof(Animations)).GetValue(k);
                         k = AnimatorValues.Animations.Length;
