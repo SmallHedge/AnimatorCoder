@@ -15,17 +15,21 @@ namespace SHG.AnimatorCoder
         private Animations[] currentAnimation;
         private bool[] layerLocked;
         private ParameterDisplay[] parameters;
-        private Coroutine currentCoroutine = null;
+        private Coroutine[] currentCoroutine;
 
         /// <summary> Sets up the Animator Brain </summary>
-        public void Initialize()
+        public void Initialize(Animator animator = null)
         {
             AnimatorValues.Initialize();
 
-            Animator animator = GetComponent<Animator>();
+            if(animator == null)
+                animator = GetComponent<Animator>();
+            else
+                this.animator = animator;
+                
+            currentCoroutine = new Coroutine[animator.layerCount];
             layerLocked = new bool[animator.layerCount];
             currentAnimation = new Animations[animator.layerCount];
-            this.animator = animator;
 
             for (int i = 0; i < animator.layerCount; ++i)
             {
@@ -131,7 +135,7 @@ namespace SHG.AnimatorCoder
 
                 if (layerLocked[layer] || currentAnimation[layer] == data.animation) return false;
 
-                if (currentCoroutine != null) StopCoroutine(currentCoroutine);
+                if (currentCoroutine[layer] != null) StopCoroutine(currentCoroutine[layer]);
                 layerLocked[layer] = data.lockLayer;
                 currentAnimation[layer] = data.animation;
 
@@ -139,7 +143,7 @@ namespace SHG.AnimatorCoder
 
                 if (data.nextAnimation != null)
                 {
-                    currentCoroutine = StartCoroutine(Wait());
+                    currentCoroutine[layer] = StartCoroutine(Wait());
                     IEnumerator Wait()
                     {
                         animator.Update(0);
@@ -215,8 +219,6 @@ namespace SHG.AnimatorCoder
         {
             return animations[(int)animation];
         }
-
-
     }
 
     /// <summary> Allows the animation parameters to be shown in debug inspector </summary>
