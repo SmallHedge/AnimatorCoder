@@ -1,5 +1,5 @@
 //Author: Small Hedge Games
-//Date: 08/04/2024
+//Date: 02/07/2024
 
 using System.Collections;
 using UnityEngine;
@@ -11,7 +11,7 @@ namespace SHG.AnimatorCoder
     {
         /// <summary> The baseline animation logic on a specific layer </summary>
         public abstract void DefaultAnimation(int layer);
-        private Animator animator;
+        private Animator animator = null;
         private Animations[] currentAnimation;
         private bool[] layerLocked;
         private ParameterDisplay[] parameters;
@@ -23,19 +23,19 @@ namespace SHG.AnimatorCoder
             AnimatorValues.Initialize();
 
             if(animator == null)
-                animator = GetComponent<Animator>();
+                this.animator = GetComponent<Animator>();
             else
                 this.animator = animator;
                 
-            currentCoroutine = new Coroutine[animator.layerCount];
-            layerLocked = new bool[animator.layerCount];
-            currentAnimation = new Animations[animator.layerCount];
+            currentCoroutine = new Coroutine[this.animator.layerCount];
+            layerLocked = new bool[this.animator.layerCount];
+            currentAnimation = new Animations[this.animator.layerCount];
 
-            for (int i = 0; i < animator.layerCount; ++i)
+            for (int i = 0; i < this.animator.layerCount; ++i)
             {
                 layerLocked[i] = false;
 
-                int hash = animator.GetCurrentAnimatorStateInfo(i).shortNameHash;
+                int hash = this.animator.GetCurrentAnimatorStateInfo(i).shortNameHash;
                 for (int k = 0; k < AnimatorValues.Animations.Length; ++k)
                 {
                     if (hash == AnimatorValues.Animations[k])
